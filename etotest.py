@@ -159,20 +159,46 @@ def eto_compute():
         return (((0.408*row.iloc[12])*(row.iloc[28]-0))+(row.iloc[17]*(900/(row.iloc[11]+273))*(row.iloc[15]-row.iloc[16])*row.iloc[7]))/(row.iloc[12]+(row.iloc[17]*(1+(0.34*row.iloc[7]))))
     daily_data['ETo'] = daily_data.apply(eto_pm, axis = 1)
 
-    st.subheader("ตารางค่า ETo รายวัน")
-    st.dataframe(daily_data[['timestmap', 'ETo']])
+    custom_slider_colors = """
+    <style>
+        .rangeslider-bg {
+            fill: lightgray !important;
+        }
+        .rangeslider-mask-min, .rangeslider-mask-max {
+            fill: gray !important;
+        }
+        .rangeslider-slidebox {
+            fill: blue !important;
+        }
+    </style>
+    """
+    st.markdown(custom_slider_colors, unsafe_allow_html=True)
+    print(daily_data.info())
 
-    gb = GridOptionsBuilder.from_dataframe(daily_data[['timestamp', 'ETo']])
-    gb.configure_pagination()
-    grid_options = gb.build()
-    AgGrid(daily_data[['timestamp', 'ETo']], gridOptions=grid_options)
+  #Temperature Graph
+    st.subheader('🌿💧 :blue[Evaporation Transpiration Reference (ETO (mm.))]')
+    fig_temp = px.bar(daily_data, x='timestamp', y=['ETo'])
+      # Customize the y-axis label
+    fig_temp.update_yaxes(title_text="Evaporation Transpiration Reference (mm.)")  # Change the y-axis label
 
-    st.subheader("กราฟค่า ETo รายวัน")
-    fig = px.line(daily_data, x=daily_data['timestamp'], y='ETo', title="ETo Daily Trend")
-    st.plotly_chart(fig)
+    fig_temp.update_xaxes(
+        title_text='Date',
+        rangeslider_visible=True,  # เพิ่ม slider ใต้กราฟ
+)
+    st.plotly_chart(fig_temp,use_container_width=True)
 
-    st.subheader("ดาวน์โหลดข้อมูล ETo")
-    csv = daily_data.to_csv(index=False).encode('utf-8')
-    st.download_button("ดาวน์โหลดไฟล์ CSV", data=csv, file_name="ETo_data.csv", mime="text/csv")
+     #Show Table
+    daily_data1 = daily_data[['timestamp','ETo']]
+    gd=GridOptionsBuilder.from_dataframe(daily_data1)
+    gd.configure_pagination(paginationAutoPageSize=False)
+    #gd.configure_default_column()
+    gridoptions = gd.build()
+#    AgGrid(daily_data1,gridOptions=gridoptions)
+    daily_data_copy = daily_data1.copy()
+    AgGrid(daily_data_copy, gridOptions=gridoptions)
 
-     
+    Dailydatacsv=daily_data1.to_csv(index=False)
+    st.download_button('Download Data',data=Dailydatacsv,file_name='DailydataETo.csv',mime='text/scv',
+        help='Click Here to Download for CSV format')
+
+#    print(daily_data)
